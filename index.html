@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Footy IQ — Football Trivia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pitch: #0a3d1f;
+    --pitch-mid: #0f5a2e;
+    --grass: #1a7a3e;
+    --lime: #b8f000;
+    --lime-dim: #8ab800;
+    --white: #f5f5f0;
+    --off: #e8e4d8;
+    --muted: #8a8a80;
+    --dark: #0a0a08;
+    --card: #111a10;
+    --card2: #0d1a0c;
+    --red: #e63946;
+    --blue: #4cc9f0;
+    --amber: #ffb703;
+    --team-a: #4cc9f0;
+    --team-b: #ff6b6b;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--pitch);
+    color: var(--white);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.018) 60px, rgba(255,255,255,0.018) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.018) 60px, rgba(255,255,255,0.018) 61px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    padding: 0 20px 40px;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: flex; flex-direction: column; min-height: 100dvh; }
+
+  /* ── TYPOGRAPHY ── */
+  .display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; line-height: 1; }
+  h1.display { font-size: clamp(52px, 14vw, 72px); }
+  h2.display { font-size: clamp(36px, 9vw, 48px); }
+  h3.display { font-size: clamp(28px, 7vw, 36px); }
+
+  /* ── PILL BADGE ── */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 100px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .pill-lime { background: var(--lime); color: var(--dark); }
+  .pill-muted { background: rgba(255,255,255,0.1); color: var(--muted); }
+  .pill-a { background: rgba(76,201,240,0.15); color: var(--team-a); border: 1px solid rgba(76,201,240,0.3); }
+  .pill-b { background: rgba(255,107,107,0.15); color: var(--team-b); border: 1px solid rgba(255,107,107,0.3); }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card-sm { padding: 14px 16px; border-radius: var(--radius-sm); }
+
+  /* ── INPUTS ── */
+  input[type="text"] {
+    width: 100%; padding: 14px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-sm);
+    color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 16px;
+    outline: none; transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: var(--lime); }
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 16px 24px;
+    border-radius: var(--radius-sm); border: none; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.06em;
+    transition: transform 0.12s, opacity 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-lime { background: var(--lime); color: var(--dark); }
+  .btn-lime:hover { background: #caff00; }
+  .btn-ghost { background: rgba(255,255,255,0.07); color: var(--white); border: 1px solid rgba(255,255,255,0.12); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+  .btn-sm { padding: 10px 18px; font-size: 16px; }
+  .btn:disabled { opacity: 0.4; pointer-events: none; }
+
+  /* ── LABEL ── */
+  .label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: rgba(255,255,255,0.07); margin: 20px 0; }
+
+  /* ══════════════════════════════
+     HOME SCREEN
+  ══════════════════════════════ */
+  #home { padding-top: 60px; gap: 0; }
+  .home-logo { margin-bottom: 8px; }
+  .home-tagline { color: var(--muted); font-size: 14px; margin-bottom: 48px; }
+  .home-ball {
+    font-size: 64px; display: block; margin-bottom: 16px;
+    animation: bounce 2.4s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .home-actions { display: flex; flex-direction: column; gap: 12px; margin-top: auto; padding-top: 32px; }
+
+  /* ══════════════════════════════
+     CREATE / JOIN SCREENS
+  ══════════════════════════════ */
+  .form-screen { padding-top: 40px; gap: 24px; }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: none; border: none; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
+    padding: 0; margin-bottom: 8px;
+  }
+  .back-btn:hover { color: var(--white); }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .seg-group { display: flex; gap: 8px; }
+  .seg-btn {
+    flex: 1; padding: 10px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted); font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s;
+  }
+  .seg-btn.active { background: var(--lime); color: var(--dark); border-color: var(--lime); }
+
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cat-btn {
+    padding: 12px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.15s; text-align: center;
+  }
+  .cat-btn .cat-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+  .cat-btn.active { background: rgba(184,240,0,0.12); border-color: var(--lime); color: var(--lime); }
+
+  /* ══════════════════════════════
+     LOBBY SCREEN
+  ══════════════════════════════ */
+  #lobby { padding-top: 40px; gap: 20px; }
+  .room-code-display {
+    text-align: center; padding: 28px 20px;
+    background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: var(--radius);
+  }
+  .room-code-big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 13vw, 64px);
+    letter-spacing: 0.15em; color: var(--lime);
+    display: block; margin: 8px 0;
+  }
+  .teams-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .team-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.07); overflow: hidden;
+  }
+  .team-header {
+    padding: 12px 14px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .team-header-a { border-bottom: 2px solid var(--team-a); }
+  .team-header-b { border-bottom: 2px solid var(--team-b); }
+  .team-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.06em; }
+  .team-name-a { color: var(--team-a); }
+  .team-name-b { color: var(--team-b); }
+  .team-players { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; min-height: 60px; }
+  .player-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 8px;
+    background: rgba(255,255,255,0.05); font-size: 13px; font-weight: 500;
+  }
+  .player-chip .avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+  }
+  .player-chip.me { background: rgba(184,240,0,0.08); }
+  .player-chip.me .name { color: var(--lime); }
+  .empty-slot { color: var(--muted); font-size: 12px; font-style: italic; padding: 4px 0; }
+  .lobby-actions { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+  .lobby-meta { text-align: center; font-size: 12px; color: var(--muted); }
+
+  /* ══════════════════════════════
+     LOADING SCREEN
+  ══════════════════════════════ */
+  #loading {
+    align-items: center; justify-content: center; gap: 24px;
+    padding: 40px 20px;
+  }
+  .loading-ball {
+    font-size: 56px;
+    animation: spin-roll 1.2s linear infinite;
+  }
+  @keyframes spin-roll {
+    from { transform: rotate(0deg) translateX(0); }
+    25% { transform: rotate(90deg) translateX(8px); }
+    50% { transform: rotate(180deg) translateX(0); }
+    75% { transform: rotate(270deg) translateX(-8px); }
+    to { transform: rotate(360deg) translateX(0); }
+  }
+  .loading-text { text-align: center; }
+  .dots::after {
+    content: ''; animation: dotdot 1.4s steps(4,end) infinite;
+  }
+  @keyframes dotdot { 0%,20%{content:'.'} 40%{content:'..'} 60%{content:'...'} 80%,100%{content:''} }
+
+  /* ══════════════════════════════
+     SCOREBOARD STRIP (during game)
+  ══════════════════════════════ */
+  .score-strip {
+    display: flex; align-items: stretch; gap: 0;
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.07); overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .score-team {
+    flex: 1; padding: 12px 14px; text-align: center;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .score-team-a { border-right: 1px solid rgba(255,255,255,0.07); }
+  .score-team-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+  .score-team-pts {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px; letter-spacing: 0.04em; line-height: 1;
+  }
+  .score-divider {
+    display: flex; align-items: center; padding: 0 10px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px;
+    color: var(--muted);
+  }
+
+  /* ══════════════════════════════
+     QUESTION SCREEN
+  ══════════════════════════════ */
+  #question { padding-top: 24px; gap: 16px; }
+  .q-header { display: flex; align-items: center; justify-content: space-between; }
+  .q-progress { display: flex; gap: 4px; }
+  .q-pip { width: 24px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.12); transition: background 0.3s; }
+  .q-pip.done { background: var(--lime-dim); }
+  .q-pip.active { background: var(--lime); }
+  .q-timer {
+    font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em;
+    color: var(--lime); transition: color 0.3s; min-width: 36px; text-align: right;
+  }
+  .q-timer.urgent { color: var(--red); animation: pulse 0.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .q-cat-bar { display: flex; align-items: center; gap: 8px; }
+
+  .q-card {
+    background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: var(--radius); padding: 22px 20px;
+  }
+  .q-text { font-size: 18px; font-weight: 500; line-height: 1.5; color: var(--white); }
+  .q-my-team {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted); margin-top: 12px;
+    padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .q-my-team .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer; transition: all 0.15s; text-align: left;
+  }
+  .opt:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); }
+  .opt:active { transform: scale(0.98); }
+  .opt-letter {
+    width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+    background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .opt-text { font-size: 15px; font-weight: 400; color: var(--white); line-height: 1.3; }
+  .opt.selected { background: rgba(184,240,0,0.1); border-color: var(--lime); }
+  .opt.selected .opt-letter { background: var(--lime); color: var(--dark); }
+  .opt.correct { background: rgba(26,122,62,0.25); border-color: var(--grass); }
+  .opt.correct .opt-letter { background: var(--grass); color: var(--white); }
+  .opt.wrong { background: rgba(230,57,70,0.15); border-color: var(--red); }
+  .opt.wrong .opt-letter { background: var(--red); color: var(--white); }
+  .opt.disabled { pointer-events: none; opacity: 0.55; }
+  .opt.correct.disabled, .opt.wrong.disabled { opacity: 1; }
+
+  .wait-msg {
+    text-align: center; font-size: 13px; color: var(--muted);
+    padding: 10px; animation: fade-in 0.4s ease;
+  }
+  @keyframes fade-in { from { opacity:0; transform:translateY(4px) } to { opacity:1; transform:none } }
+
+  /* ══════════════════════════════
+     FEEDBACK / BETWEEN
+  ══════════════════════════════ */
+  .feedback-card {
+    border-radius: var(--radius); padding: 18px 20px;
+    animation: slide-up 0.3s ease;
+  }
+  @keyframes slide-up { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }
+  .feedback-correct { background: rgba(26,122,62,0.2); border: 1px solid rgba(26,122,62,0.4); }
+  .feedback-wrong { background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.3); }
+  .feedback-timeout { background: rgba(255,183,3,0.12); border: 1px solid rgba(255,183,3,0.3); }
+  .feedback-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.04em; margin-bottom: 4px; }
+  .feedback-fact { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5; margin-top: 8px; }
+
+  /* ══════════════════════════════
+     BETWEEN ROUNDS
+  ══════════════════════════════ */
+  #between { padding-top: 32px; gap: 20px; }
+  .between-scores { display: flex; flex-direction: column; gap: 10px; }
+  .between-player-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+  }
+  .rank-num { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--muted); width: 24px; }
+  .rank-1 { color: var(--lime); }
+  .rank-2 { color: var(--off); }
+  .rank-pts { font-family: 'Bebas Neue', sans-serif; font-size: 22px; margin-left: auto; }
+
+  /* ══════════════════════════════
+     FINAL SCREEN
+  ══════════════════════════════ */
+  #final { padding-top: 48px; gap: 24px; }
+  .winner-banner {
+    text-align: center; padding: 32px 20px;
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .trophy { font-size: 64px; display: block; margin-bottom: 12px;
+    animation: trophy-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) both; }
+  @keyframes trophy-pop { from{transform:scale(0.4) rotate(-15deg);opacity:0} to{transform:none;opacity:1} }
+  .final-scores { display: flex; flex-direction: column; gap: 10px; }
+  .final-team-card {
+    padding: 16px 18px; border-radius: var(--radius);
+    background: var(--card); border: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .final-team-card.winner-a { border-color: var(--team-a); background: rgba(76,201,240,0.08); }
+  .final-team-card.winner-b { border-color: var(--team-b); background: rgba(255,107,107,0.08); }
+  .final-team-info { display: flex; flex-direction: column; gap: 4px; }
+  .final-team-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.04em; }
+  .final-team-members { font-size: 12px; color: var(--muted); }
+  .final-team-pts { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.04em; }
+
+  /* ══════════════════════════════
+     WAITING SCREEN (non-host)
+  ══════════════════════════════ */
+  #waiting {
+    align-items: center; justify-content: center; gap: 20px;
+    text-align: center; padding: 40px 20px;
+  }
+
+  /* ══════════════════════════════
+     TOAST
+  ══════════════════════════════ */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--white); color: var(--dark);
+    padding: 12px 20px; border-radius: 100px;
+    font-size: 14px; font-weight: 600;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+    z-index: 1000; white-space: nowrap; opacity: 0; pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* ══════════════════════════════
+     RESPONSIVE SPACING
+  ══════════════════════════════ */
+  .mt-auto { margin-top: auto; }
+  .gap-12 { display: flex; flex-direction: column; gap: 12px; }
+  .gap-8 { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; }
+  .text-center { text-align: center; }
+  .text-muted { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══ HOME ══ -->
+  <div id="home" class="screen">
+    <span class="home-ball">⚽</span>
+    <h1 class="display home-logo">Footy IQ</h1>
+    <p class="home-tagline">Football trivia. With your friends. On your phone.</p>
+    <div class="home-actions">
+      <button class="btn btn-lime" onclick="showScreen('create')">Create room</button>
+      <button class="btn btn-ghost" onclick="showScreen('join')">Join room</button>
+      <p style="text-align:center; font-size:11px; color:var(--muted); margin-top:4px;">
+        European · Egyptian & Arab · World Cup
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ CREATE ══ -->
+  <div id="create" class="screen form-screen">
+    <button class="back-btn" onclick="showScreen('home')">← Back</button>
+    <h2 class="display">Create room</h2>
+
+    <div class="field">
+      <span class="label">Your name</span>
+      <input type="text" id="create-name" placeholder="Enter your name" maxlength="18">
+    </div>
+
+    <div class="field">
+      <span class="label">Questions</span>
+      <div class="seg-group">
+        <button class="seg-btn" data-q="5" onclick="selQ(this)">5</button>
+        <button class="seg-btn active" data-q="10" onclick="selQ(this)">10</button>
+        <button class="seg-btn" data-q="15" onclick="selQ(this)">15</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="label">Category</span>
+      <div class="cat-grid">
+        <button class="cat-btn active" data-cat="mixed" onclick="selCat(this)">
+          <span class="cat-icon">🌍</span>Mixed
+        </button>
+        <button class="cat-btn" data-cat="clubs" onclick="selCat(this)">
+          <span class="cat-icon">🏟️</span>Clubs
+        </button>
+        <button class="cat-btn" data-cat="players" onclick="selCat(this)">
+          <span class="cat-icon">⭐</span>Players
+        </button>
+        <button class="cat-btn" data-cat="worldcup" onclick="selCat(this)">
+          <span class="cat-icon">🏆</span>World Cup
+        </button>
+      </div>
+    </div>
+
+    <button class="btn btn-lime mt-auto" onclick="createRoom()">Create room →</button>
+  </div>
+
+  <!-- ══ JOIN ══ -->
+  <div id="join" class="screen form-screen">
+    <button class="back-btn" onclick="showScreen('home')">← Back</button>
+    <h2 class="display">Join room</h2>
+
+    <div class="field">
+      <span class="label">Your name</span>
+      <input type="text" id="join-name" placeholder="Enter your name" maxlength="18">
+    </div>
+
+    <div class="field">
+      <span class="label">Room code</span>
+      <input type="text" id="join-code" placeholder="e.g. SALAH73"
+             maxlength="8" style="text-transform:uppercase;letter-spacing:0.1em;font-size:22px;font-family:'Bebas Neue',sans-serif;">
+    </div>
+
+    <div class="field">
+      <span class="label">Pick your team</span>
+      <div class="seg-group">
+        <button class="seg-btn active" data-team="A" onclick="selTeam(this)" style="color:var(--team-a)">Team A</button>
+        <button class="seg-btn" data-team="B" onclick="selTeam(this)" style="color:var(--team-b)">Team B</button>
+      </div>
+    </div>
+
+    <button class="btn btn-lime mt-auto" onclick="joinRoom()">Join →</button>
+  </div>
+
+  <!-- ══ LOBBY ══ -->
+  <div id="lobby" class="screen">
+    <div class="row-between" style="margin-top:40px; margin-bottom:4px;">
+      <h2 class="display">Lobby</h2>
+      <span class="pill pill-lime" id="lobby-q-badge">10 Qs</span>
+    </div>
+
+    <div class="room-code-display">
+      <span class="label">Share this code</span>
+      <span class="room-code-big" id="lobby-code">——</span>
+      <button onclick="copyCode()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;margin-top:4px;">
+        Tap to copy
+      </button>
+    </div>
+
+    <div class="teams-container">
+      <div class="team-card">
+        <div class="team-header team-header-a">
+          <span class="team-name team-name-a">Team A</span>
+          <span id="count-a" class="pill pill-muted">0</span>
+        </div>
+        <div class="team-players" id="team-a-players"></div>
+      </div>
+      <div class="team-card">
+        <div class="team-header team-header-b">
+          <span class="team-name team-name-b">Team B</span>
+          <span id="count-b" class="pill pill-muted">0</span>
+        </div>
+        <div class="team-players" id="team-b-players"></div>
+      </div>
+    </div>
+
+    <p class="lobby-meta" id="lobby-status">Waiting for players to join...</p>
+
+    <div class="lobby-actions mt-auto">
+      <button class="btn btn-lime" id="start-btn" onclick="startGame()" disabled>Start game</button>
+      <button class="btn btn-ghost btn-sm" onclick="leaveRoom()">Leave room</button>
+    </div>
+  </div>
+
+  <!-- ══ WAITING (non-host in lobby) ══ -->
+  <div id="waiting" class="screen">
+    <span style="font-size:48px;">⏳</span>
+    <h3 class="display" id="wait-title">Waiting for host</h3>
+    <p class="text-muted" id="wait-sub">The host will start the game soon</p>
+    <div style="margin-top:24px;">
+      <div class="room-code-display" style="padding:20px;">
+        <span class="label">Room code</span>
+        <span class="room-code-big" id="wait-code" style="font-size:42px;">——</span>
+      </div>
+    </div>
+    <div style="margin-top:32px; text-align:center;">
+      <div class="teams-container">
+        <div class="team-card">
+          <div class="team-header team-header-a">
+            <span class="team-name team-name-a">Team A</span>
+          </div>
+          <div class="team-players" id="wait-team-a"></div>
+        </div>
+        <div class="team-card">
+          <div class="team-header team-header-b">
+            <span class="team-name team-name-b">Team B</span>
+          </div>
+          <div class="team-players" id="wait-team-b"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LOADING ══ -->
+  <div id="loading" class="screen">
+    <span class="loading-ball">⚽</span>
+    <div class="loading-text">
+      <h3 class="display" style="margin-bottom:8px;">Generating questions<span class="dots"></span></h3>
+      <p class="text-muted">Powered by Claude AI</p>
+    </div>
+  </div>
+
+  <!-- ══ QUESTION ══ -->
+  <div id="question" class="screen">
+    <div class="q-header">
+      <div class="q-progress" id="q-pips"></div>
+      <div class="q-timer" id="q-timer">20</div>
+    </div>
+
+    <div class="score-strip">
+      <div class="score-team score-team-a">
+        <span class="score-team-label" style="color:var(--team-a)">Team A</span>
+        <span class="score-team-pts" id="score-a" style="color:var(--team-a)">0</span>
+      </div>
+      <div class="score-divider">VS</div>
+      <div class="score-team">
+        <span class="score-team-label" style="color:var(--team-b)">Team B</span>
+        <span class="score-team-pts" id="score-b" style="color:var(--team-b)">0</span>
+      </div>
+    </div>
+
+    <div class="q-cat-bar">
+      <span class="pill pill-muted" id="q-cat-pill">Category</span>
+      <span class="text-muted" id="q-num-label">Q 1/10</span>
+    </div>
+
+    <div class="q-card">
+      <p class="q-text" id="q-text">Loading...</p>
+      <div class="q-my-team" id="q-my-team-bar">
+        <span class="dot" id="my-team-dot"></span>
+        <span id="my-team-label"></span>
+      </div>
+    </div>
+
+    <div class="options" id="options"></div>
+    <div id="feedback-area"></div>
+    <p class="wait-msg" id="wait-for-next" style="display:none;">Next question coming up...</p>
+  </div>
+
+  <!-- ══ BETWEEN ══ -->
+  <div id="between" class="screen">
+    <div class="row-between">
+      <h3 class="display">After Q<span id="btwn-q">1</span></h3>
+      <span class="pill pill-lime" id="btwn-pts-gained"></span>
+    </div>
+
+    <div class="score-strip">
+      <div class="score-team score-team-a">
+        <span class="score-team-label" style="color:var(--team-a)">Team A</span>
+        <span class="score-team-pts" id="btwn-score-a" style="color:var(--team-a)">0</span>
+      </div>
+      <div class="score-divider">VS</div>
+      <div class="score-team">
+        <span class="score-team-label" style="color:var(--team-b)">Team B</span>
+        <span class="score-team-pts" id="btwn-score-b" style="color:var(--team-b)">0</span>
+      </div>
+    </div>
+
+    <div class="between-scores" id="between-scores"></div>
+
+    <div class="mt-auto" id="btwn-actions">
+      <button class="btn btn-lime" onclick="nextQ()">Next question →</button>
+    </div>
+  </div>
+
+  <!-- ══ FINAL ══ -->
+  <div id="final" class="screen">
+    <div class="winner-banner">
+      <span class="trophy" id="winner-trophy">🏆</span>
+      <h2 class="display" id="winner-label">Team A wins!</h2>
+      <p class="text-muted" id="winner-sub"></p>
+    </div>
+
+    <div class="final-scores" id="final-scores"></div>
+
+    <div class="gap-12 mt-auto">
+      <button class="btn btn-lime" onclick="playAgain()">Play again</button>
+      <button class="btn btn-ghost" onclick="goHome()">Back to home</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S = {
+  myId: '', myName: '', myTeam: 'A',
+  isHost: false, roomCode: '',
+  players: [], // {id, name, team}
+  teamScores: { A: 0, B: 0 },
+  playerScores: {}, // id -> pts
+  questions: [],
+  currentQ: 0,
+  qCount: 10, category: 'mixed',
+  answered: false, startTime: 0,
+  timerInterval: null, pollInterval: null,
+  lastAnswerPts: 0
+};
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function uid() { return Math.random().toString(36).substr(2,9); }
+function initials(name) { return name.trim().split(' ').map(w=>w[0]).join('').toUpperCase().substr(0,2); }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function toast(msg, dur=2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function selQ(btn) {
+  document.querySelectorAll('.seg-btn[data-q]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  S.qCount = parseInt(btn.dataset.q);
+}
+function selCat(btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  S.category = btn.dataset.cat;
+}
+function selTeam(btn) {
+  document.querySelectorAll('.seg-btn[data-team]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  S.myTeam = btn.dataset.team;
+}
+
+// ═══════════════════════════════════════════
+// STORAGE HELPERS
+// ═══════════════════════════════════════════
+async function saveRoom(code, data) {
+  try { await window.storage.set('ftq_' + code, JSON.stringify(data), true); } catch(e) {}
+}
+async function loadRoom(code) {
+  try {
+    const r = await window.storage.get('ftq_' + code, true);
+    return r ? JSON.parse(r.value) : null;
+  } catch(e) { return null; }
+}
+
+function genCode() {
+  const words = ['SALAH','MESSI','ZIZOU','RONNY','FARAG','MOSLY','TOTTI','XAVI','PELE','KANTE','NEYMAR','BENZMA'];
+  return words[Math.floor(Math.random()*words.length)] + Math.floor(10+Math.random()*89);
+}
+
+// ═══════════════════════════════════════════
+// CREATE ROOM
+// ═══════════════════════════════════════════
+async function createRoom() {
+  const name = document.getElementById('create-name').value.trim();
+  if (!name) { toast('Enter your name first'); return; }
+  S.myName = name; S.myId = uid();
+  S.myTeam = 'A'; S.isHost = true;
+  S.roomCode = genCode();
+  S.players = [{ id: S.myId, name: S.myName, team: 'A' }];
+  S.playerScores = { [S.myId]: 0 };
+  S.teamScores = { A:0, B:0 };
+
+  const room = {
+    host: S.myId,
+    players: S.players,
+    playerScores: S.playerScores,
+    teamScores: S.teamScores,
+    qCount: S.qCount,
+    category: S.category,
+    status: 'lobby',
+    questions: [],
+    currentQ: 0,
+    readyForNext: false
+  };
+  await saveRoom(S.roomCode, room);
+  showLobby();
+}
+
+// ═══════════════════════════════════════════
+// JOIN ROOM
+// ═══════════════════════════════════════════
+async function joinRoom() {
+  const name = document.getElementById('join-name').value.trim();
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (!name) { toast('Enter your name'); return; }
+  if (!code) { toast('Enter the room code'); return; }
+
+  const room = await loadRoom(code);
+  if (!room) { toast('Room not found — check the code'); return; }
+  if (room.status !== 'lobby') { toast('Game already in progress'); return; }
+  if (room.players.length >= 8) { toast('Room is full'); return; }
+
+  S.myId = uid(); S.myName = name; S.roomCode = code; S.isHost = false;
+  S.qCount = room.qCount; S.category = room.category;
+
+  room.players.push({ id: S.myId, name: S.myName, team: S.myTeam });
+  room.playerScores[S.myId] = 0;
+  await saveRoom(code, room);
+
+  S.players = room.players;
+  S.playerScores = room.playerScores;
+  S.teamScores = room.teamScores;
+
+  showWaiting();
+  startPolling();
+}
+
+// ═══════════════════════════════════════════
+// LOBBY
+// ═══════════════════════════════════════════
+function showLobby() {
+  document.getElementById('lobby-code').textContent = S.roomCode;
+  document.getElementById('lobby-q-badge').textContent = S.qCount + ' Qs';
+  document.getElementById('wait-code').textContent = S.roomCode;
+  renderLobbyTeams();
+  showScreen('lobby');
+  if (S.isHost) startHostPoll();
+}
+
+function renderLobbyTeams() {
+  const teamA = S.players.filter(p => p.team === 'A');
+  const teamB = S.players.filter(p => p.team === 'B');
+
+  function renderPlayers(players, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = players.length
+      ? players.map(p => `
+        <div class="player-chip${p.id===S.myId?' me':''}">
+          <div class="avatar" style="background:${p.team==='A'?'rgba(76,201,240,0.2)':'rgba(255,107,107,0.2)'};color:${p.team==='A'?'var(--team-a)':'var(--team-b)'}">
+            ${initials(p.name)}
+          </div>
+          <span class="name">${p.name}${p.id===S.myId?' (you)':''}</span>
+        </div>`).join('')
+      : '<span class="empty-slot">No players yet</span>';
+  }
+
+  renderPlayers(teamA, 'team-a-players');
+  renderPlayers(teamB, 'team-b-players');
+  renderPlayers(teamA, 'wait-team-a');
+  renderPlayers(teamB, 'wait-team-b');
+
+  document.getElementById('count-a').textContent = teamA.length;
+  document.getElementById('count-b').textContent = teamB.length;
+
+  const canStart = teamA.length >= 1 && teamB.length >= 1;
+  const startBtn = document.getElementById('start-btn');
+  if (startBtn) {
+    startBtn.disabled = !canStart;
+    document.getElementById('lobby-status').textContent = canStart
+      ? 'Ready! Start when everyone\'s in.'
+      : 'Need at least 1 player on each team';
+  }
+}
+
+function showWaiting() {
+  document.getElementById('wait-code').textContent = S.roomCode;
+  renderLobbyTeams();
+  showScreen('waiting');
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(S.roomCode).catch(() => {});
+  toast('Code copied! ' + S.roomCode);
+}
+
+function leaveRoom() { clearAll(); showScreen('home'); }
+function goHome() { clearAll(); showScreen('home'); }
+function clearAll() {
+  clearInterval(S.timerInterval); clearInterval(S.pollInterval);
+  S.players = []; S.questions = []; S.currentQ = 0;
+  S.teamScores = { A:0, B:0 }; S.playerScores = {};
+}
+
+// ═══════════════════════════════════════════
+// POLLING
+// ═══════════════════════════════════════════
+function startHostPoll() {
+  clearInterval(S.pollInterval);
+  S.pollInterval = setInterval(async () => {
+    const room = await loadRoom(S.roomCode);
+    if (!room) return;
+    S.players = room.players;
+    S.playerScores = room.playerScores;
+    renderLobbyTeams();
+  }, 2500);
+}
+
+function startPolling() {
+  clearInterval(S.pollInterval);
+  S.pollInterval = setInterval(async () => {
+    const room = await loadRoom(S.roomCode);
+    if (!room) return;
+    S.players = room.players;
+    S.playerScores = room.playerScores;
+    S.teamScores = room.teamScores;
+    renderLobbyTeams();
+
+    if (room.status === 'loading') {
+      clearInterval(S.pollInterval);
+      showScreen('loading');
+      pollForQuestions();
+    }
+    if (room.status === 'playing' && room.questions.length > 0) {
+      clearInterval(S.pollInterval);
+      S.questions = room.questions;
+      S.currentQ = 0;
+      startGame_client();
+    }
+  }, 2000);
+}
+
+function pollForQuestions() {
+  const p = setInterval(async () => {
+    const room = await loadRoom(S.roomCode);
+    if (!room) return;
+    if (room.status === 'playing' && room.questions.length > 0) {
+      clearInterval(p);
+      S.questions = room.questions;
+      S.players = room.players;
+      S.teamScores = room.teamScores;
+      S.playerScores = room.playerScores;
+      S.currentQ = 0;
+      startGame_client();
+    }
+  }, 1500);
+}
+
+// ═══════════════════════════════════════════
+// START GAME (HOST)
+// ═══════════════════════════════════════════
+async function startGame() {
+  clearInterval(S.pollInterval);
+  const room = await loadRoom(S.roomCode);
+  room.status = 'loading';
+  await saveRoom(S.roomCode, room);
+  showScreen('loading');
+  await generateQuestions(room);
+}
+
+async function generateQuestions(room) {
+  const catMap = {
+    mixed: 'a mix of all categories including clubs, players, and tournaments',
+    clubs: 'football clubs — their history, trophies, managers, and stadiums',
+    players: 'famous football players — careers, records, nationalities, and clubs',
+    worldcup: 'FIFA World Cup history — winners, top scorers, iconic moments, and records'
+  };
+  const focus = catMap[S.category] || catMap.mixed;
+
+  const prompt = `Generate exactly ${S.qCount} football trivia questions. Focus areas: ${focus}. Cover these regions specifically: European football (Premier League, La Liga, Serie A, Bundesliga, Champions League, Europa League), Egyptian football (Al Ahly, Zamalek, Egyptian national team, Egyptian Premier League), Arab football (Saudi Pro League, Moroccan league, Algerian league, Arab national teams), and FIFA World Cup history. Make questions casual/easy-medium difficulty — fun for friends at a gathering. Return ONLY a valid JSON array with no markdown, no explanation. Each item: {"q":"question text","options":["A text","B text","C text","D text"],"answer":0,"category":"Players|Clubs|World Cup|Egypt & Arab","fact":"one short interesting fact about the answer (max 20 words)"}. The "answer" field is 0-indexed. All 4 options must be plausible. Vary the categories evenly.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content[0].text.replace(/```json|```/g,'').trim();
+    S.questions = JSON.parse(raw);
+  } catch(e) {
+    S.questions = getFallback(S.qCount);
+  }
+
+  S.currentQ = 0;
+  room.questions = S.questions;
+  room.status = 'playing';
+  room.currentQ = 0;
+  room.teamScores = { A:0, B:0 };
+  room.playerScores = {};
+  S.players.forEach(p => { room.playerScores[p.id] = 0; });
+  await saveRoom(S.roomCode, room);
+  startGame_client();
+}
+
+function startGame_client() {
+  S.teamScores = { A:0, B:0 };
+  S.players.forEach(p => { S.playerScores[p.id] = 0; });
+  renderQuestion(0);
+}
+
+// ═══════════════════════════════════════════
+// QUESTION RENDERING
+// ═══════════════════════════════════════════
+function renderQuestion(idx) {
+  clearInterval(S.timerInterval);
+  S.answered = false;
+  S.currentQ = idx;
+  S.startTime = Date.now();
+
+  const q = S.questions[idx];
+  const total = S.questions.length;
+  const myTeam = S.players.find(p => p.id === S.myId)?.team || S.myTeam;
+
+  // Pips
+  const pips = document.getElementById('q-pips');
+  pips.innerHTML = Array.from({length: total}, (_,i) =>
+    `<div class="q-pip ${i<idx?'done':i===idx?'active':''}"></div>`
+  ).join('');
+
+  // Score strip
+  document.getElementById('score-a').textContent = S.teamScores.A;
+  document.getElementById('score-b').textContent = S.teamScores.B;
+
+  // Category + number
+  const catColors = { 'Players':'pill-blue','Clubs':'pill-green','World Cup':'pill-amber','Egypt & Arab':'pill-coral' };
+  document.getElementById('q-cat-pill').textContent = q.category;
+  document.getElementById('q-num-label').textContent = `Q ${idx+1}/${total}`;
+
+  // Question
+  document.getElementById('q-text').textContent = q.q;
+
+  // My team indicator
+  document.getElementById('my-team-dot').style.background = myTeam === 'A' ? 'var(--team-a)' : 'var(--team-b)';
+  document.getElementById('my-team-label').textContent = `You're on Team ${myTeam}`;
+
+  // Options
+  const letters = ['A','B','C','D'];
+  document.getElementById('options').innerHTML = q.options.map((opt, i) =>
+    `<button class="opt" id="opt-${i}" onclick="selectAnswer(${i})">
+      <div class="opt-letter">${letters[i]}</div>
+      <span class="opt-text">${opt}</span>
+    </button>`
+  ).join('');
+
+  document.getElementById('feedback-area').innerHTML = '';
+  document.getElementById('wait-for-next').style.display = 'none';
+
+  // Timer
+  let t = 20;
+  const timerEl = document.getElementById('q-timer');
+  timerEl.textContent = t;
+  timerEl.className = 'q-timer';
+  S.timerInterval = setInterval(() => {
+    t--;
+    timerEl.textContent = t;
+    if (t <= 5) timerEl.className = 'q-timer urgent';
+    if (t <= 0 && !S.answered) { clearInterval(S.timerInterval); timeOut(); }
+  }, 1000);
+
+  showScreen('question');
+}
+
+function selectAnswer(idx) {
+  if (S.answered) return;
+  S.answered = true;
+  clearInterval(S.timerInterval);
+
+  const q = S.questions[S.currentQ];
+  const elapsed = (Date.now() - S.startTime) / 1000;
+  const correct = idx === q.answer;
+  const timePts = Math.round(Math.max(0, (20 - elapsed) / 20) * 500);
+  const pts = correct ? 1000 + timePts : 0;
+  S.lastAnswerPts = pts;
+
+  const myTeam = S.players.find(p => p.id === S.myId)?.team || S.myTeam;
+
+  if (correct) {
+    S.teamScores[myTeam] = (S.teamScores[myTeam] || 0) + pts;
+    S.playerScores[S.myId] = (S.playerScores[S.myId] || 0) + pts;
+  }
+
+  // Style options
+  document.querySelectorAll('.opt').forEach((btn, i) => {
+    btn.classList.add('disabled');
+    if (i === q.answer) btn.classList.add('correct');
+    else if (i === idx && !correct) btn.classList.add('wrong');
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedback-area');
+  if (correct) {
+    fb.innerHTML = `<div class="feedback-card feedback-correct">
+      <div class="feedback-title" style="color:var(--lime)">Correct! +${pts} pts</div>
+      ${q.fact ? `<p class="feedback-fact">${q.fact}</p>` : ''}
+    </div>`;
+  } else if (idx === q.answer) {
+    // handled above
+  } else {
+    fb.innerHTML = `<div class="feedback-card feedback-wrong">
+      <div class="feedback-title" style="color:var(--red)">Wrong</div>
+      <p class="feedback-fact">Answer: <strong>${q.options[q.answer]}</strong>${q.fact ? ' — ' + q.fact : ''}</p>
+    </div>`;
+  }
+
+  setTimeout(() => showBetween(), 2600);
+}
+
+function timeOut() {
+  S.answered = true;
+  const q = S.questions[S.currentQ];
+  document.querySelectorAll('.opt').forEach((btn, i) => {
+    btn.classList.add('disabled');
+    if (i === q.answer) btn.classList.add('correct');
+  });
+  document.getElementById('feedback-area').innerHTML = `
+    <div class="feedback-card feedback-timeout">
+      <div class="feedback-title" style="color:var(--amber)">Time's up!</div>
+      <p class="feedback-fact">Answer: <strong>${q.options[q.answer]}</strong>${q.fact ? ' — ' + q.fact : ''}</p>
+    </div>`;
+  setTimeout(() => showBetween(), 2200);
+}
+
+// ═══════════════════════════════════════════
+// BETWEEN ROUNDS
+// ═══════════════════════════════════════════
+function showBetween() {
+  document.getElementById('btwn-q').textContent = S.currentQ + 1;
+  document.getElementById('btwn-score-a').textContent = S.teamScores.A;
+  document.getElementById('btwn-score-b').textContent = S.teamScores.B;
+
+  if (S.lastAnswerPts > 0) {
+    document.getElementById('btwn-pts-gained').textContent = '+' + S.lastAnswerPts + ' pts';
+    document.getElementById('btwn-pts-gained').style.display = '';
+  } else {
+    document.getElementById('btwn-pts-gained').style.display = 'none';
+  }
+
+  // Player leaderboard
+  const sorted = [...S.players].sort((a,b) => (S.playerScores[b.id]||0) - (S.playerScores[a.id]||0));
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('between-scores').innerHTML = sorted.map((p, i) => `
+    <div class="between-player-row">
+      <span class="rank-num ${i===0?'rank-1':i===1?'rank-2':''}">${medals[i] || (i+1)}</span>
+      <div class="avatar" style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:${p.team==='A'?'rgba(76,201,240,0.15)':'rgba(255,107,107,0.15)'};color:${p.team==='A'?'var(--team-a)':'var(--team-b)'}">
+        ${initials(p.name)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-size:14px;font-weight:500;color:${p.id===S.myId?'var(--lime)':'var(--white)'}">${p.name}${p.id===S.myId?' (you)':''}</span>
+        <span class="pill ${p.team==='A'?'pill-a':'pill-b'}" style="font-size:10px;padding:2px 6px;">Team ${p.team}</span>
+      </div>
+      <span class="rank-pts" style="color:${p.team==='A'?'var(--team-a)':'var(--team-b)'}">${S.playerScores[p.id]||0}</span>
+    </div>`).join('');
+
+  const isLast = S.currentQ >= S.questions.length - 1;
+  document.getElementById('btwn-actions').innerHTML = isLast
+    ? `<button class="btn btn-lime" onclick="showFinal()">See final results →</button>`
+    : `<button class="btn btn-lime" onclick="nextQ()">Next question →</button>`;
+
+  showScreen('between');
+}
+
+function nextQ() {
+  S.currentQ++;
+  if (S.currentQ >= S.questions.length) { showFinal(); return; }
+  renderQuestion(S.currentQ);
+}
+
+// ═══════════════════════════════════════════
+// FINAL SCREEN
+// ═══════════════════════════════════════════
+function showFinal() {
+  const aWins = S.teamScores.A > S.teamScores.B;
+  const draw = S.teamScores.A === S.teamScores.B;
+  const myTeam = S.players.find(p => p.id === S.myId)?.team || S.myTeam;
+
+  document.getElementById('winner-trophy').textContent = draw ? '🤝' : '🏆';
+  document.getElementById('winner-label').textContent = draw ? "It's a draw!" : `Team ${aWins?'A':'B'} wins!`;
+  document.getElementById('winner-sub').textContent = draw
+    ? 'Equal teams, equal knowledge'
+    : (myTeam === (aWins?'A':'B') ? 'Your team wins! Well played.' : 'Better luck next time!');
+
+  const teamAPlayers = S.players.filter(p=>p.team==='A').map(p=>p.name).join(', ');
+  const teamBPlayers = S.players.filter(p=>p.team==='B').map(p=>p.name).join(', ');
+
+  document.getElementById('final-scores').innerHTML = `
+    <div class="final-team-card ${aWins?'winner-a':draw?'':''}" style="order:${aWins?0:1}">
+      <div class="final-team-info">
+        <span class="final-team-name" style="color:var(--team-a)">Team A</span>
+        <span class="final-team-members">${teamAPlayers || '—'}</span>
+        ${aWins?'<span class="pill pill-lime" style="margin-top:4px;width:fit-content">Winners</span>':''}
+      </div>
+      <span class="final-team-pts" style="color:var(--team-a)">${S.teamScores.A}</span>
+    </div>
+    <div class="final-team-card ${!aWins&&!draw?'winner-b':''}" style="order:${aWins?1:0}">
+      <div class="final-team-info">
+        <span class="final-team-name" style="color:var(--team-b)">Team B</span>
+        <span class="final-team-members">${teamBPlayers || '—'}</span>
+        ${!aWins&&!draw?'<span class="pill pill-lime" style="margin-top:4px;width:fit-content">Winners</span>':''}
+      </div>
+      <span class="final-team-pts" style="color:var(--team-b)">${S.teamScores.B}</span>
+    </div>`;
+
+  showScreen('final');
+}
+
+function playAgain() {
+  S.teamScores = { A:0, B:0 };
+  S.playerScores = {};
+  S.questions = []; S.currentQ = 0;
+  if (S.isHost) showLobby();
+  else showWaiting();
+}
+
+// ═══════════════════════════════════════════
+// FALLBACK QUESTIONS
+// ═══════════════════════════════════════════
+function getFallback(n) {
+  const bank = [
+    {q:"Which club has won the most UEFA Champions League titles?",options:["Barcelona","Bayern Munich","AC Milan","Real Madrid"],answer:3,category:"Clubs",fact:"Real Madrid have won the European Cup/Champions League a record number of times."},
+    {q:"Mohamed Salah plays for which Premier League club?",options:["Manchester City","Chelsea","Liverpool","Arsenal"],answer:2,category:"Players",fact:"Salah has been one of Liverpool's most prolific scorers since joining in 2017."},
+    {q:"Which country won the 2022 FIFA World Cup?",options:["France","Brazil","Croatia","Argentina"],answer:3,category:"World Cup",fact:"Argentina beat France on penalties in one of the greatest finals ever played."},
+    {q:"Al Ahly SC is based in which city?",options:["Alexandria","Giza","Cairo","Port Said"],answer:2,category:"Egypt & Arab",fact:"Al Ahly is the most decorated club in African football history."},
+    {q:"Who scored the 'Hand of God' goal in the 1986 World Cup?",options:["Pelé","Ronaldo","Maradona","Zidane"],answer:2,category:"World Cup",fact:"Maradona's controversial goal against England became one of football's most famous moments."},
+    {q:"Which club does Cristiano Ronaldo currently play for in Saudi Arabia?",options:["Al-Hilal","Al-Ittihad","Al-Nassr","Al-Ahli"],answer:2,category:"Players",fact:"Ronaldo joined Al-Nassr in January 2023 in a landmark move to Saudi football."},
+    {q:"The Cairo Derby is played between Al Ahly and which other club?",options:["Ismaily","Zamalek","Pyramids","Arab Contractors"],answer:1,category:"Egypt & Arab",fact:"The Cairo Derby is one of the most-watched club rivalries in Africa."},
+    {q:"Which country hosts the Premier League?",options:["Spain","France","Germany","England"],answer:3,category:"Clubs",fact:"The Premier League was founded in 1992 and is the world's most-watched football league."},
+    {q:"Lionel Messi spent most of his career at which club?",options:["PSG","Inter Miami","Manchester City","Barcelona"],answer:3,category:"Players",fact:"Messi spent 21 years at Barcelona before leaving in 2021."},
+    {q:"Which African country has reached the most FIFA World Cup knockout stages?",options:["Cameroon","Nigeria","Senegal","Morocco"],answer:3,category:"World Cup",fact:"Morocco made history at the 2022 World Cup by reaching the semi-finals."},
+    {q:"What colour are the home shirts of Real Madrid?",options:["Blue","Red","Yellow","White"],answer:3,category:"Clubs",fact:"Real Madrid's all-white kit has been their iconic home strip since the 1950s."},
+    {q:"Which country did Zinedine Zidane represent?",options:["Algeria","Tunisia","Morocco","France"],answer:3,category:"Players",fact:"Zidane was born in Marseille to Algerian parents and chose to play for France."},
+    {q:"The Egyptian national football team is nicknamed what?",options:["The Lions","The Pharaohs","The Eagles","The Warriors"],answer:1,category:"Egypt & Arab",fact:"Egypt's national team has won the Africa Cup of Nations a record 7 times."},
+    {q:"Which team won the first FIFA World Cup in 1930?",options:["Brazil","Argentina","Italy","Uruguay"],answer:3,category:"World Cup",fact:"Uruguay hosted and won the inaugural World Cup, beating Argentina 4-2 in the final."},
+    {q:"Barcelona's home stadium is called?",options:["Bernabéu","Anfield","Camp Nou","San Siro"],answer:2,category:"Clubs",fact:"Camp Nou is the largest stadium in Spain with a capacity of around 99,000."}
+  ];
+  return bank.sort(()=>Math.random()-0.5).slice(0, Math.min(n, bank.length));
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+showScreen('home');
+</script>
+</body>
+</html>
